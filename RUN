@@ -1,0 +1,6 @@
+cd f:/lou-says/lou-say-web
+npm install
+
+npm run build-data
+
+npm run dev
