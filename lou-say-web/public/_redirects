@@ -1,0 +1,4 @@
+# SPA 路由回退：不存在的路径交给前端路由处理（防止文章详情页刷新 404）
+# /assets/* 规则放在前面：过期的哈希资源请求返回真实 404，而不是 index.html
+/assets/*  /assets/:splat  200
+/*         /index.html     200
