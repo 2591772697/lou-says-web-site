@@ -26,3 +26,4 @@ Notes
 - If the same article exists in several formats (`.md` / `.docx` / `.doc`) in one folder, only one is used: priority is `.md` > `.docx` > `.doc`. The other files stay on disk untouched. Change `PREFERRED_EXT` in `scripts/build-data.js` to change the preference.
 - For Word documents, frontmatter lines (title/date/category/tags) pasted as text at the top of the document are detected, removed from the article body, and used as metadata.
 - `public/data.json` is generated and gitignored — it is rebuilt on every deploy/build.
+- The whole site uses SimSun / NSimSun (宋体/新宋体) fonts. A settings page at `/settings` offers light/dark/system theme and a continuous font-size slider (80%–160%); preferences are saved in the browser (localStorage) and applied before first paint to avoid flashes. A theme quick-toggle also lives at the bottom of the sidebar.

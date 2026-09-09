@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useSettings } from '../context/SettingsContext';
 import { buildCategoryTree } from '../utils/helpers';
 
 export default function Sidebar({ onNavigate }) {
   const { articles, loading } = useData();
+  const { resolvedTheme, toggleTheme } = useSettings();
   const [searchParams] = useSearchParams();
   const location = useLocation();
 
@@ -99,6 +101,23 @@ export default function Sidebar({ onNavigate }) {
         全部文章
       </Link>
       <div className="category-tree">{renderNodes(tree)}</div>
+      <div className="sidebar-footer">
+        <button
+          type="button"
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          title={resolvedTheme === 'dark' ? '切换到白天模式' : '切换到黑夜模式'}
+        >
+          {resolvedTheme === 'dark' ? '☀️ 白天' : '🌙 黑夜'}
+        </button>
+        <Link
+          to="/settings"
+          onClick={onNavigate}
+          className={'settings-link' + (location.pathname === '/settings' ? ' active' : '')}
+        >
+          ⚙️ 设置
+        </Link>
+      </div>
     </nav>
   );
 }

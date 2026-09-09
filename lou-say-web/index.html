@@ -4,6 +4,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>国学读书分享 · lou-says</title>
+    <script>
+      // 防闪烁：在样式加载前应用已保存的主题与字号偏好
+      (function () {
+        try {
+          var t = localStorage.getItem('ls-theme');
+          var dark =
+            t === 'dark' ||
+            ((!t || t === 'auto') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+          var f = Number(localStorage.getItem('ls-font-size'));
+          if (f >= 80 && f <= 160) document.documentElement.style.fontSize = f + '%';
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -4,6 +4,8 @@ import Layout from './components/Layout';
 import ArticleList from './components/ArticleList';
 import ArticleDetail from './components/ArticleDetail';
 import { DataProvider } from './context/DataContext';
+import { SettingsProvider } from './context/SettingsContext';
+import Settings from './components/Settings';
 
 function HomeWrapper() {
   const [searchParams] = useSearchParams();
@@ -26,15 +28,18 @@ function NotFound() {
 export default function App() {
   return (
     <DataProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<HomeWrapper />} />
-            <Route path="article/:slug" element={<ArticleDetail />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <SettingsProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<HomeWrapper />} />
+              <Route path="article/:slug" element={<ArticleDetail />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </SettingsProvider>
     </DataProvider>
   );
 }
