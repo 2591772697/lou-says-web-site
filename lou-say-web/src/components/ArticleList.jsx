@@ -1,10 +1,8 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 
-export default function ArticleList({ category: propCategory = '' }) {
+export default function ArticleList({ category = '' }) {
   const { articles = [], loading } = useData();
-  const [searchParams] = useSearchParams();
-  const category = propCategory || searchParams.get('category') || '';
 
   if (loading) return <div className="loading-hint">加载文章中...</div>;
 
@@ -16,7 +14,11 @@ export default function ArticleList({ category: propCategory = '' }) {
     <div className="list-container">
       <div className="banner">
         <h1>📖 国学读书分享</h1>
-        <p>品味经典，传承智慧</p>
+        {category ? (
+          <p>品味经典，传承智慧</p>
+        ) : (
+          <p className="slogan">罢黜百家，独尊娄术</p>
+        )}
       </div>
 
       <div className="list-head">
