@@ -51,7 +51,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside style={{ width: '250px', padding: '20px', borderRight: '1px solid #eaeaea' }}>
+    <div style={{ padding: '12px' }}>
       <h3>📚 分类</h3>
       <div>
         <Link to="/" style={{ fontWeight: !currentCategory ? 'bold' : 'normal' }}>
@@ -59,6 +59,6 @@ export default function Sidebar() {
         </Link>
       </div>
       {renderTree(categoryMap)}
-    </aside>
+    </div>
   );
 }
