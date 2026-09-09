@@ -22,5 +22,7 @@ Notes
 - Place your `.md` and `.docx` files under `lou-say-web/content/`, organised by folder. The folder structure maps directly to site categories (e.g. `content/经部/易类/2026-01-01-乾卦解读.md` → category `经部/易类`). Both first-level folders (e.g. `儒家/`) and nested folders (e.g. `经部/易类/`) display their articles.
 - File name format: `YYYY-MM-DD-文章标题.md` / `.docx` (date is derived from the file name).
 - Optional frontmatter in `.md` files: `title`, `date`, `category`, `excerpt`, `tags` (array).
-- If the same article exists as both `.md` and `.docx` in one folder, only the `.md` version is used (the `.docx` stays on disk untouched). Change `PREFERRED_EXT` in `scripts/build-data.js` to prefer `.docx` instead.
+- `.doc` (old Word format) is also supported — content is extracted as plain text. Word documents work in folders of any depth, e.g. `content/道家/xxx.docx` (level 1) or `content/经部/书类/xxx.docx` (level 2).
+- If the same article exists in several formats (`.md` / `.docx` / `.doc`) in one folder, only one is used: priority is `.md` > `.docx` > `.doc`. The other files stay on disk untouched. Change `PREFERRED_EXT` in `scripts/build-data.js` to change the preference.
+- For Word documents, frontmatter lines (title/date/category/tags) pasted as text at the top of the document are detected, removed from the article body, and used as metadata.
 - `public/data.json` is generated and gitignored — it is rebuilt on every deploy/build.
