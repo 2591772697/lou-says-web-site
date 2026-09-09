@@ -454,8 +454,23 @@ a {
 
 .detail-toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 4px;
+}
+.back-btn {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--primary);
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+.back-btn:hover {
+  border-color: var(--primary);
 }
 .toc-toggle {
   border: 1px solid var(--border);

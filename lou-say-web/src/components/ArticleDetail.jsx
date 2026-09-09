@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 
 export default function ArticleDetail() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { articles, loading } = useData();
   const contentRef = useRef(null);
   const [headings, setHeadings] = useState([]);
@@ -84,6 +85,13 @@ export default function ArticleDetail() {
 
   const showToc = headings.length > 1;
 
+  // 返回上一页：优先回浏览器历史（站内前进而来）；直接打开文章（无历史）时回所属分类列表
+  const goBack = () => {
+    const idx = window.history.state && window.history.state.idx;
+    if (idx > 0) navigate(-1);
+    else navigate(`/?category=${encodeURIComponent(article.category)}`);
+  };
+
   return (
     <div className="article-detail-wrapper">
       {showToc && tocVisible && (
@@ -102,8 +110,11 @@ export default function ArticleDetail() {
       )}
 
       <div className="article-detail">
-        {showToc && (
-          <div className="detail-toolbar">
+        <div className="detail-toolbar">
+          <button type="button" className="back-btn" onClick={goBack}>
+            ← 返回上一页
+          </button>
+          {showToc && (
             <button
               type="button"
               className="toc-toggle"
@@ -111,8 +122,8 @@ export default function ArticleDetail() {
             >
               {tocVisible ? '隐藏目录' : '显示目录'}
             </button>
-          </div>
-        )}
+          )}
+        </div>
         <h1>{article.title}</h1>
         <div className="meta">
           {article.date} — 📂 {article.category}
