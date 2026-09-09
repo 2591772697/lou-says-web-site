@@ -58,3 +58,7 @@ npm run preview      # 本地预览构建产物
 - 根目录：`/lou-say-web`
 
 推送 main 分支后 Cloudflare 会自动构建部署。
+
+## 许可证
+
+本项目采用 [MIT License](./LICENSE) 开源。
