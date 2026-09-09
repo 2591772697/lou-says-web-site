@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"nodemon --watch content --exec npm run build-data\" \"vite\"",
-    "build": "vite build",
+    "build": "node scripts/build-data.js && vite build",
     "preview": "vite preview",
     "build-data": "node scripts/build-data.js"
   },

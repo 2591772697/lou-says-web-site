@@ -5,11 +5,21 @@ Simple Vite + React static site scaffold. Content is read from `lou-say-web/cont
 Quick start
 
 ```bash
-cd f:/lou-says/lou-say-web
+cd E:/lou-says-website/lou-says-web-site/lou-say-web
 npm install
-npm run build-data
-npm run dev
+npm run dev          # 自动监听 content/ 变化并重建 data.json，同时启动 vite 开发服务器
+```
+
+Production build (runs build-data automatically):
+
+```bash
+npm run build        # 生成 public/data.json + dist/
+npm run preview      # 本地预览构建产物
 ```
 
 Notes
-Place your `.md` and `.docx` files under `lou-say-web/content/` (e.g. `f:/lou-says/lou-say-web/content/`) following the described structure. This folder will be part of your Cloudflare Pages deployment.
+
+- Place your `.md` and `.docx` files under `lou-say-web/content/`, organised by folder. The folder structure maps directly to site categories (e.g. `content/经部/易类/2026-01-01-乾卦解读.md` → category `经部/易类`).
+- File name format: `YYYY-MM-DD-文章标题.md` / `.docx` (date is derived from the file name).
+- Optional frontmatter in `.md` files: `title`, `date`, `category`, `excerpt`.
+- `public/data.json` is generated and gitignored — it is rebuilt on every deploy/build.

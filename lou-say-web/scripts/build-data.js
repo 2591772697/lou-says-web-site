@@ -37,6 +37,48 @@ function parseFileName(fileName){
   return { date: '1970-01-01', title: nameWithoutExt }
 }
 
+// frontmatter 的 date 会被 YAML 解析成 Date 对象，统一转回 YYYY-MM-DD 字符串
+function normalizeDate(d){
+  if (d instanceof Date && !isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+  if (typeof d === 'string') return d.slice(0, 10)
+  return d
+}
+
+// 给 h1~h6 生成稳定的锚点 id（用于文章内目录），已有 id 则保留
+function addHeadingIds(html){
+  const used = {}
+  return html.replace(/<(h[1-6])([^>]*)>([\s\S]*?)<\/\1>/gi, (match, tag, attrs, inner) => {
+    if (/id\s*=/.test(attrs)) return match
+    const text = inner.replace(/<[^>]+>/g, '').trim()
+    if (!text) return match
+    let base = text
+      .toLowerCase()
+      .replace(/[^一-龥a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+    if (!base) base = 'heading'
+    let id = base
+    let n = 2
+    while (used[id]) { id = `${base}-${n++}` }
+    used[id] = true
+    return `<${tag}${attrs} id="${id}">${inner}</${tag}>`
+  })
+}
+
+// 解码常见 HTML 实体并压缩空白（用于摘要纯文本）
+function cleanPlainText(html){
+  return html
+    .replace(/<[^>]+>/g, '')
+    .replace(/&#(\d+);/g, (m, d) => String.fromCharCode(Number(d)))
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 async function buildData(){
   // content directory lives inside the project to be deployed (lou-say-web/content)
   const contentDir = path.resolve(process.cwd(), 'content')
@@ -76,13 +118,15 @@ async function buildData(){
       }
     }
 
-    const plainText = contentHtml.replace(/<[^>]+>/g, '')
+    contentHtml = addHeadingIds(contentHtml)
+
+    const plainText = cleanPlainText(contentHtml)
     const excerpt = (frontmatter.excerpt) ? frontmatter.excerpt : (plainText.slice(0, 150) + '...')
 
     articles.push({
       slug,
       title: frontmatter.title || title,
-      date: frontmatter.date || date,
+      date: normalizeDate(frontmatter.date || date),
       category: frontmatter.category || category || '未分类',
       excerpt,
       content: contentHtml

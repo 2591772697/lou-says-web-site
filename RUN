@@ -1,6 +1,6 @@
-cd f:/lou-says/lou-say-web
+cd E:/lou-says-website/lou-says-web-site/lou-say-web
 npm install
 
-npm run build-data
-
 npm run dev
+（开发时用 npm run dev：自动重建 data.json + 启动开发服务器；
+ 生产构建用 npm run build：自动重建 data.json + 生成 dist/）

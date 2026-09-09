@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 
@@ -7,71 +7,143 @@ export default function ArticleDetail() {
   const { articles, loading } = useData();
   const contentRef = useRef(null);
   const [headings, setHeadings] = useState([]);
+  const [activeId, setActiveId] = useState('');
   const [tocVisible, setTocVisible] = useState(true);
 
-  const article = articles.find(a => a.slug === slug);
+  const article = articles.find((a) => a.slug === slug);
 
-  // 当文章数据加载完成且内容渲染后，提取标题生成 TOC
+  // 切换文章时回到页面顶部
   useEffect(() => {
-    if (!article) {
-      setHeadings([])
-      return
-    }
-    if (contentRef.current) {
-      // 提取所有 h1~h6 标签
-      const elements = contentRef.current.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      const items = [];
-      elements.forEach((el, index) => {
-        // 如果标题没有 id，自动生成一个
-        if (!el.id) el.id = `heading-${index}`;
-        items.push({
-          id: el.id,
-          text: el.textContent,
-          level: parseInt(el.tagName[1], 10) // 1~6
-        });
-      });
-      setHeadings(items);
-    }
-  }, [article?.content]); // 依赖文章内容变化（当文章切换或内容改变时重新生成）
+    window.scrollTo(0, 0);
+    setActiveId('');
+  }, [slug]);
 
-  if (loading) return <div>加载文章详情...</div>;
+  // 内容渲染后提取标题生成目录（构建脚本已生成 id，这里兜底补齐）
+  useEffect(() => {
+    if (!contentRef.current) return;
+    const elements = contentRef.current.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    const items = [];
+    elements.forEach((el, index) => {
+      if (!el.id) el.id = `heading-${index}`;
+      items.push({
+        id: el.id,
+        text: el.textContent.trim(),
+        level: parseInt(el.tagName[1], 10), // 1~6
+      });
+    });
+    setHeadings(items);
+  }, [article?.content]);
+
+  // 滚动监听：高亮当前阅读位置对应的目录项
+  useEffect(() => {
+    if (headings.length === 0) return;
+    const onScroll = () => {
+      const wrapper = contentRef.current;
+      if (!wrapper) return;
+      const elements = wrapper.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      let current = '';
+      elements.forEach((el) => {
+        if (el.getBoundingClientRect().top <= 100) current = el.id;
+      });
+      // 滚动到底部附近时激活最后一个标题
+      if (wrapper.getBoundingClientRect().bottom <= window.innerHeight && elements.length) {
+        current = elements[elements.length - 1].id;
+      }
+      setActiveId(current);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [headings]);
+
+  // 上一篇（更早）/ 下一篇（更新），按日期倒序
+  const prevArticle = useMemo(() => {
+    const sorted = [...articles].sort((a, b) => (a.date < b.date ? 1 : -1));
+    const idx = sorted.findIndex((a) => a.slug === slug);
+    if (idx === -1) return null;
+    return sorted[idx + 1] || null;
+  }, [articles, slug]);
+
+  const nextArticle = useMemo(() => {
+    const sorted = [...articles].sort((a, b) => (a.date < b.date ? 1 : -1));
+    const idx = sorted.findIndex((a) => a.slug === slug);
+    if (idx === -1) return null;
+    return sorted[idx - 1] || null;
+  }, [articles, slug]);
+
+  if (loading) return <div className="loading-hint">加载文章详情...</div>;
   if (!article) {
     return (
-      <div>
-        未找到文章。<Link to="/">返回</Link>
+      <div className="not-found">
+        <span className="big">📭</span>
+        未找到文章。
+        <Link to="/">返回文章列表</Link>
       </div>
     );
   }
 
-  // 如果标题少于 2 个，不显示 TOC（避免单个标题）
   const showToc = headings.length > 1;
-  const visibleToc = showToc && tocVisible;
 
   return (
     <div className="article-detail-wrapper">
-      {visibleToc && (
-        <aside className={"toc-sidebar" + (tocVisible ? '' : ' collapsed')}>
+      {showToc && tocVisible && (
+        <aside className="toc-sidebar">
           <h4>📑 目录</h4>
           <ul>
             {headings.map((h) => (
-              <li key={h.id} style={{ paddingLeft: (h.level - 1) * 16 }}>
-                <a href={`#${h.id}`}>{h.text}</a>
+              <li key={h.id} style={{ paddingLeft: (h.level - 1) * 14 }}>
+                <a href={`#${h.id}`} className={activeId === h.id ? 'active' : ''}>
+                  {h.text}
+                </a>
               </li>
             ))}
           </ul>
         </aside>
       )}
+
       <div className="article-detail">
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <div />
-          <button className="toc-toggle" onClick={() => setTocVisible(v => !v)}>{tocVisible ? '隐藏目录' : '显示目录'}</button>
-        </div>
+        {showToc && (
+          <div className="detail-toolbar">
+            <button
+              type="button"
+              className="toc-toggle"
+              onClick={() => setTocVisible((v) => !v)}
+            >
+              {tocVisible ? '隐藏目录' : '显示目录'}
+            </button>
+          </div>
+        )}
         <h1>{article.title}</h1>
-        <div className="meta">{article.date} — {article.category}</div>
-        <div className="content" ref={contentRef} dangerouslySetInnerHTML={{ __html: article.content }} />
+        <div className="meta">
+          {article.date} — 📂 {article.category}
+        </div>
+        <div
+          className="content"
+          ref={contentRef}
+          dangerouslySetInnerHTML={{ __html: article.content }}
+        />
+
+        <nav className="article-nav">
+          <div className="nav-item prev">
+            {prevArticle && (
+              <Link to={`/article/${encodeURIComponent(prevArticle.slug)}`}>
+                <span className="nav-label">← 上一篇</span>
+                {prevArticle.title}
+              </Link>
+            )}
+          </div>
+          <div className="nav-item next">
+            {nextArticle && (
+              <Link to={`/article/${encodeURIComponent(nextArticle.slug)}`}>
+                <span className="nav-label">下一篇 →</span>
+                {nextArticle.title}
+              </Link>
+            )}
+          </div>
+        </nav>
+
         <Link to="/" className="back-link">← 返回列表</Link>
       </div>
     </div>
   );
 }
-
