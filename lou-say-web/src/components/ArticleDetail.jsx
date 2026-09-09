@@ -116,6 +116,13 @@ export default function ArticleDetail() {
         <h1>{article.title}</h1>
         <div className="meta">
           {article.date} — 📂 {article.category}
+          {article.tags && article.tags.length > 0 && (
+            <div className="tags">
+              {article.tags.map((t) => (
+                <span className="tag" key={t}>{t}</span>
+              ))}
+            </div>
+          )}
         </div>
         <div
           className="content"

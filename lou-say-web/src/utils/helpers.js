@@ -27,7 +27,7 @@ export function buildCategoryTree(articles) {
   })
 
   function toArray(node) {
-    return Object.keys(node).map((k) => {
+    return Object.keys(node).sort().map((k) => {
       const children = toArray(node[k].__children)
       const direct = node[k].__articles.length
       const total = direct + children.reduce((sum, c) => sum + c.total, 0)

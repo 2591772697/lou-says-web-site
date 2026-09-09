@@ -20,12 +20,15 @@ export default function ArticleList({ category: propCategory = '' }) {
       </div>
 
       <div className="list-head">
-        <h2>{category ? `分类：${category}` : '文章列表'}</h2>
-        {category && (
-          <Link to="/" className="clear-filter">
-            ← 查看全部
-          </Link>
-        )}
+        <h2>{category ? `分类：${category}` : '全部文章'}</h2>
+        <span className="list-count">
+          共 {filtered.length} 篇
+          {category && (
+            <Link to="/" className="clear-filter">
+              ← 查看全部
+            </Link>
+          )}
+        </span>
       </div>
 
       {filtered.length === 0 ? (
@@ -44,6 +47,13 @@ export default function ArticleList({ category: propCategory = '' }) {
                 <span>📅 {article.date}</span>
                 <span>📂 {article.category}</span>
               </div>
+              {article.tags && article.tags.length > 0 && (
+                <div className="tags">
+                  {article.tags.map((t) => (
+                    <span className="tag" key={t}>{t}</span>
+                  ))}
+                </div>
+              )}
               <p className="excerpt">{article.excerpt}</p>
             </article>
           ))}

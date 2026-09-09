@@ -6,6 +6,9 @@ const mammoth = require('mammoth')
 
 const md = new MarkdownIt({ html: true })
 
+// 同一目录下存在同名 .md 与 .docx 时视为同一篇文章，优先保留的格式
+const PREFERRED_EXT = '.md'
+
 function walkDir(dir, baseDir = dir){
   let results = []
   const list = fs.readdirSync(dir)
@@ -19,11 +22,40 @@ function walkDir(dir, baseDir = dir){
       if (ext === '.md' || ext === '.docx') {
         const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/')
         const category = path.dirname(relativePath)
-        results.push({ filePath: fullPath, category: category === '.' ? '' : category })
+        results.push({
+          filePath: fullPath,
+          relPath: relativePath,
+          ext,
+          category: category === '.' ? '' : category
+        })
       }
     }
   })
   return results
+}
+
+// 同一目录下同名 .md/.docx 视为同一篇文章，去重（优先保留 PREFERRED_EXT）
+function dedupeFormats(entries){
+  const seen = new Map()  // relPath 去扩展名 -> entry
+  const kept = []
+  const skipped = []
+  for (const entry of entries) {
+    const key = entry.relPath.replace(/\.[^.]+$/, '')
+    const existing = seen.get(key)
+    if (!existing) {
+      seen.set(key, entry)
+      kept.push(entry)
+      continue
+    }
+    if (entry.ext === PREFERRED_EXT) {
+      kept[kept.indexOf(existing)] = entry
+      seen.set(key, entry)
+      skipped.push(existing.relPath)
+    } else {
+      skipped.push(entry.relPath)
+    }
+  }
+  return { kept, skipped }
 }
 
 function parseFileName(fileName){
@@ -89,13 +121,18 @@ async function buildData(){
     process.exit(1)
   }
 
-  const entries = walkDir(contentDir)
+  const all = walkDir(contentDir)
+  // 按相对路径稳定排序（与资源管理器一致），保证分类在导航中的顺序稳定
+  all.sort((a, b) => (a.relPath < b.relPath ? -1 : 1))
+
+  const { kept, skipped } = dedupeFormats(all)
+  skipped.forEach((p) => console.log(`ℹ️ 忽略同名重复格式文件: ${p}（保留 ${PREFERRED_EXT} 版本）`))
+
   const articles = []
 
-  for(const entry of entries){
-    const { filePath, category } = entry
+  for(const entry of kept){
+    const { filePath, category, ext } = entry
     const fileName = path.basename(filePath)
-    const ext = path.extname(filePath).toLowerCase()
     const slug = path.basename(filePath, ext)
     const { date, title } = parseFileName(fileName)
 
@@ -122,18 +159,32 @@ async function buildData(){
 
     const plainText = cleanPlainText(contentHtml)
     const excerpt = (frontmatter.excerpt) ? frontmatter.excerpt : (plainText.slice(0, 150) + '...')
+    const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : []
 
     articles.push({
       slug,
       title: frontmatter.title || title,
       date: normalizeDate(frontmatter.date || date),
       category: frontmatter.category || category || '未分类',
+      tags,
       excerpt,
       content: contentHtml
     })
   }
 
   articles.sort((a,b) => (a.date < b.date ? 1 : -1))
+
+  // 防止不同目录下的同名文件 slug 冲突
+  const usedSlugs = new Set()
+  for (const a of articles) {
+    if (usedSlugs.has(a.slug)) {
+      let n = 2
+      while (usedSlugs.has(`${a.slug}-${n}`)) n++
+      console.warn(`⚠️ slug 重复: ${a.slug}（${a.category}），已改为 ${a.slug}-${n}`)
+      a.slug = `${a.slug}-${n}`
+    }
+    usedSlugs.add(a.slug)
+  }
 
   fs.mkdirSync(path.dirname(outputFile), { recursive: true })
   fs.writeFileSync(outputFile, JSON.stringify(articles, null, 2), 'utf8')
